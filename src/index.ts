@@ -3,7 +3,7 @@ import AsyncLock from "async-lock";
 import fs from "fs";
 import path from "path";
 import URL from "url";
-import axios from "axios"
+import axios from "axios";
 
 export const numberToI32Hex = (number: number) => number.toString(16).slice(-8).padStart(8, "0");
 
@@ -16,13 +16,38 @@ export function dashDateFormatter(
     config: {
         getDate?: boolean;
         getTime?: boolean;
+        getMilliseconds?: boolean;
         rtl?: boolean;
-        dateFormat: "mm-yyyy" | "yyyy-mm" | "yyyy-mm-dd";
+        dateFormat?: "mm-yyyy" | "yyyy-mm" | "yyyy-mm-dd";
+    } = {
+        dateFormat: "yyyy-mm-dd",
+        getDate: true,
+        getMilliseconds: false,
+        getTime: true,
+        rtl: false,
     }
 ): string {
     if (!date) {
         return "";
     }
+    let { dateFormat, getDate, getMilliseconds, getTime, rtl } = config;
+    if (config.dateFormat === undefined) {
+        dateFormat = "yyyy-mm-dd";
+    }
+
+    if (config.getDate === undefined) {
+        getDate = true;
+    }
+    if (config.getTime === undefined) {
+        getTime = true;
+    }
+    if (config.rtl === undefined) {
+        rtl = false;
+    }
+    if (config.getMilliseconds == undefined) {
+        getMilliseconds = false;
+    }
+
     date = new Date(date);
     const month = padDate(String(date.getMonth() + 1));
     const dayOfMonth = padDate(String(date.getDate()));
@@ -30,20 +55,24 @@ export function dashDateFormatter(
     const hour = padDate(String(date.getHours()));
     const minutes = padDate(String(date.getMinutes()));
     const seconds = padDate(String(date.getSeconds()));
+    const milliseconds = padDate(String(date.getMilliseconds()), 3);
+    let timeString = `${hour}:${minutes}:${seconds}`;
+    if (getMilliseconds) {
+        timeString += "." + milliseconds;
+    }
 
-    const timeString = `${hour}:${minutes}:${seconds}`;
     let dateString: string;
-    if (config?.dateFormat === "mm-yyyy") {
+    if (dateFormat === "mm-yyyy") {
         dateString = `${month}-${fullYear}`;
-    } else if (config?.dateFormat === "yyyy-mm") {
+    } else if (dateFormat === "yyyy-mm") {
         dateString = `${fullYear}-${month}`;
     } else {
         dateString = `${fullYear}-${month}-${dayOfMonth}`;
     }
 
-    if (config?.getDate && config?.getTime) {
-        return config.rtl ? `${timeString} ${dateString}` : `${dateString} ${timeString}`;
-    } else if (config?.getDate && !config?.getTime) {
+    if (getDate && getTime) {
+        return rtl ? `${timeString} ${dateString}` : `${dateString} ${timeString}`;
+    } else if (getDate && !getTime) {
         return dateString;
     } else {
         return timeString;
