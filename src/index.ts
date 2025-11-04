@@ -3,7 +3,7 @@ import AsyncLock from "async-lock";
 import fs from "fs";
 import path from "path";
 import URL from "url";
-const axios = (await import("axios")).default;
+import axios from "axios"
 
 export const numberToI32Hex = (number: number) => number.toString(16).slice(-8).padStart(8, "0");
 
